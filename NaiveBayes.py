@@ -49,17 +49,18 @@ carregarBases()
 '''Remover os radicais das palavras'''
 
 
-def aplicaRemocaoRadical(RegistroTweet):
-    removeRadica = nltk.stem.RSLPStemmer()
-    listaTextoSemRadical = []
+def pegarRadical(RegistroTweet):
+    pegaRadical = nltk.stem.RSLPStemmer()
+    listaTextoRadicais = []
     for (texto, usuario) in RegistroTweet:
-        textoRemovidoRadical = [str(removeRadica.stem(palavra)) for palavra in texto.split() if palavra not in stopWordsNLTK]
-        listaTextoSemRadical.append((textoRemovidoRadical, usuario))
-    return listaTextoSemRadical
+        textoSomenteRadical = [str(pegaRadical.stem(palavra)) for palavra in texto.split() if
+                                palavra not in stopWordsNLTK]
+        listaTextoRadicais.append((textoSomenteRadical, usuario))
+    return listaTextoRadicais
 
 
-frasescomstemmingtreinamento = aplicaRemocaoRadical(basetreinamento)
-frasescomstemmingteste = aplicaRemocaoRadical(baseteste)
+frasescomstemmingtreinamento = pegarRadical(basetreinamento)
+frasescomstemmingteste = pegarRadical(baseteste)
 
 
 def buscapalavras(frases):
@@ -71,6 +72,8 @@ def buscapalavras(frases):
 
 palavrastreinamento = buscapalavras(frasescomstemmingtreinamento)
 palavrasteste = buscapalavras(frasescomstemmingteste)
+
+'''Cira uma distribuição de frequência para a lista de palavras e descobre quais são as mais importantes'''
 
 
 def buscafrequencia(palavras):
@@ -114,8 +117,8 @@ for (frase, classe) in basecompletateste:
     resultado = classificador.classify(frase)
     if resultado != classe:
         erros.append((classe, resultado, frase))
-for (classe, resultado, frase) in erros:
-    print(classe, resultado, frase)
+#for (classe, resultado, frase) in erros:
+#    print(classe, resultado, frase)
 
 from nltk.metrics import ConfusionMatrix
 
