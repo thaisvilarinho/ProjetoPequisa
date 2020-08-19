@@ -46,7 +46,8 @@ def carregarBases():
 
 carregarBases()
 
-'''Remover os radicais das palavras'''
+'''Remover os radicais das palavras e armazenas as palavras que não são spotWords
+Aqui não há o controle de repetições'''
 
 
 def pegarRadical(RegistroTweet):
@@ -54,13 +55,16 @@ def pegarRadical(RegistroTweet):
     listaTextoRadicais = []
     for (texto, usuario) in RegistroTweet:
         textoSomenteRadical = [str(pegaRadical.stem(palavra)) for palavra in texto.split() if
-                                palavra not in stopWordsNLTK]
+                               palavra not in stopWordsNLTK]
         listaTextoRadicais.append((textoSomenteRadical, usuario))
     return listaTextoRadicais
 
 
 frasescomstemmingtreinamento = pegarRadical(basetreinamento)
 frasescomstemmingteste = pegarRadical(baseteste)
+
+'''Método faz a listagem de todas as palavras dos textos de cada tweet, sem a classe do usuário associado. Assim
+vamos conseguir montar mais facilmente a tabela de caraterísticas do texto'''
 
 
 def buscapalavras(frases):
@@ -73,7 +77,8 @@ def buscapalavras(frases):
 palavrastreinamento = buscapalavras(frasescomstemmingtreinamento)
 palavrasteste = buscapalavras(frasescomstemmingteste)
 
-'''Cira uma distribuição de frequência para a lista de palavras e descobre quais são as mais importantes'''
+'''Cria uma distribuição de frequência para a lista dos radicais das palavras e descobre quais são as mais 
+importantes '''
 
 
 def buscafrequencia(palavras):
@@ -84,6 +89,8 @@ def buscafrequencia(palavras):
 frequenciatreinamento = buscafrequencia(palavrastreinamento)
 frequenciateste = buscafrequencia(palavrasteste)
 
+'''Remove os radicais repetidos e cria o cabeçalho da base de dados'''
+
 
 def buscapalavrasunicas(frequencia):
     freq = frequencia.keys()
@@ -93,6 +100,9 @@ def buscapalavrasunicas(frequencia):
 palavrasunicastreinamento = buscapalavrasunicas(frequenciatreinamento)
 palavrasunicasteste = buscapalavrasunicas(frequenciateste)
 
+'''Método recebe os radicais únicos, que foram extraídos as repetições, e percorre o vetor de características 
+e as comparando com cada radical, para saber se os radicais constam ou não dentro do vetor.'''
+
 
 def extratorpalavras(documento):
     doc = set(documento)
@@ -101,8 +111,6 @@ def extratorpalavras(documento):
         caracteristicas['%s' % palavras] = (palavras in doc)
     return caracteristicas
 
-
-caracteristicasfrase = extratorpalavras(['am', 'nov', 'dia'])
 
 basecompletatreinamento = nltk.classify.apply_features(extratorpalavras, frasescomstemmingtreinamento)
 basecompletateste = nltk.classify.apply_features(extratorpalavras, frasescomstemmingteste)
@@ -117,7 +125,7 @@ for (frase, classe) in basecompletateste:
     resultado = classificador.classify(frase)
     if resultado != classe:
         erros.append((classe, resultado, frase))
-#for (classe, resultado, frase) in erros:
+# for (classe, resultado, frase) in erros:
 #    print(classe, resultado, frase)
 
 from nltk.metrics import ConfusionMatrix
