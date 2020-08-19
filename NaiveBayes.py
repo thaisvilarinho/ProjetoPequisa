@@ -18,10 +18,13 @@ stopwordsnltk = nltk.corpus.stopwords.words('portuguese')
 stopwordsnltk.append('vou')
 stopwordsnltk.append('tão')
 
-''' Cada linha lida do arquivo contêm o texto do tweet do usuário e o nome do usuário. Percorremos cada linha removendo
- o caracter de quebra de linha e separando texto e usuário para serem armazenadas em uma estrutura array bidimensional, 
- onde quando acessarmos pelos índices [x][0] teremos o texto de uma linha (x) e quando acessarmos pelos índices [x][1] 
- teremos o usuário. Exemplo: print(basePrincipal[7000][0])'''
+''' Cada linha lida do arquivo contêm o texto do tweet e o nome do usuário. Recebemos a leitura completa do arquivo de 
+texto e removemos o caracter de quebra de linha. Por fim, separamos cada linha do arquivo em campos que contenham o 
+texto e nome usuário para serem armazenadas em uma estrutura array bidimensional,onde quando acessarmos pelos 
+índices [x][0] teremos o texto de uma linha qualquer(x) e quando acessarmos pelos índices [x][1] teremos o nome 
+do usuário. Exemplo: print(basePrincipal[7000][0])
+Manter uma array bidimensional é necessária para aplicarmos o treinamento da base que gerará o modelo do algoritmo
+Naive Bayes e assim conseguirmos aplicar o teste para verificarmos a acurácia.'''
 
 
 def carregarBases():
@@ -44,25 +47,16 @@ def carregarBases():
                 registro = [texto, usuario]
                 baseteste.append(registro)
 
-
+        arquivo.close()
     except IOError:
         print('Problemas com na leitura do arquivo')
 
     print("Tamanho base treinamento: ", len(basetreinamento))
     print("Tamanho base teste: ", len(baseteste))
-    arquivo.close()
+
 
 
 carregarBases()
-
-
-def removestopwords(texto):
-    frases = []
-    for (palavras, usuario) in texto:
-        semstop = [p for p in palavras.split() if p not in stopwordsnltk]
-        frases.append((semstop, usuario))
-    return frases
-
 
 # print(removestopwords(base))
 
