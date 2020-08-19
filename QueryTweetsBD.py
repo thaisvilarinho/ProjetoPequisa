@@ -3,8 +3,9 @@
 # Importar bibliotecas
 import mysql.connector
 from mysql.connector import Error
-import numpy as np
 
+'''Buscar todos os tweets armazenados no banco de dados, e armazenar somente os campos com texto preenchido no tweet
+ e o nome do usuário, dentro arquivo de texto'''
 
 try:
     connection = mysql.connector.connect(host='localhost', user='root', passwd='', database='Twitter')
