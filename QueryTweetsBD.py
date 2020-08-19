@@ -5,9 +5,7 @@ import mysql.connector
 from mysql.connector import Error
 
 '''Buscar os tweets armazenados no banco de dados, e armazenar somente os campos com texto preenchido no tweet
- e o nome do usuário, dentro arquivo de texto
- Observação: Use o fetchall no lugar de fetchmany(totalRegistroPegar) para pegar todos os registros
- que estão armazenados no banco de dados'''
+ e o nome do usuário, dentro arquivo de texto'''
 
 
 def buscarTextoUsuario(conexao):
@@ -15,7 +13,7 @@ def buscarTextoUsuario(conexao):
     try:
         query = "select text, name from " + tabela
         cursor.execute(query)
-        tweets = cursor.fetchmany(totalRegistroPegar)  # use fetchall para pegar todos os registros
+        tweets = cursor.fetchall()
         print("Total linhas resultado da consulta: ", cursor.rowcount)
 
         with open('base.txt', 'a') as arquivo:
@@ -35,7 +33,6 @@ def buscarTextoUsuario(conexao):
 
 
 if __name__ == "__main__":
-    totalRegistroPegar = 200
     baseDeDados = "Twitter"
     tabela = 'tweets'
 

@@ -1,22 +1,14 @@
 # coding: utf-8
 
-import mysql.connector
-from mysql.connector import Error
 import nltk
-import re
-import numpy as np
 
 basetreinamento = []
 baseteste = []
 
-stopwords = ['a', 'agora', 'algum', 'alguma', 'aquele', 'aqueles', 'de', 'deu', 'do', 'e', 'estou', 'esta', 'esta',
-             'ir', 'meu', 'muito', 'mesmo', 'no', 'nossa', 'o', 'outro', 'para', 'que', 'sem', 'talvez', 'tem', 'tendo',
-             'tenha', 'teve', 'tive', 'todo', 'um', 'uma', 'umas', 'uns', 'vou']
-
 # usar as stop words do nltk
-stopwordsnltk = nltk.corpus.stopwords.words('portuguese')
-stopwordsnltk.append('vou')
-stopwordsnltk.append('tão')
+stopWordsNLTK = nltk.corpus.stopwords.words('portuguese')
+stopWordsNLTK.append('vou')
+stopWordsNLTK.append('tão')
 
 ''' Cada linha lida do arquivo contêm o texto do tweet e o nome do usuário. Recebemos a leitura completa do arquivo de 
 texto e removemos o caracter de quebra de linha. Por fim, separamos cada linha do arquivo em campos que contenham o 
@@ -51,31 +43,24 @@ def carregarBases():
     except IOError:
         print('Problemas com na leitura do arquivo')
 
-    print("Tamanho base treinamento: ", len(basetreinamento))
-    print("Tamanho base teste: ", len(baseteste))
-
-
 
 carregarBases()
 
-# print(removestopwords(base))
-
-# Remover os radicais das palavras
-def aplicastemmer(texto):
-    print(texto)
-    stemmer = nltk.stem.RSLPStemmer()
-    frasessstemming = []
-    for (palavras, usuario) in texto:
-        comstemming = [str(stemmer.stem(p)) for p in palavras.split() if p not in stopwordsnltk]
-        frasessstemming.append((comstemming, usuario))
-    return frasessstemming
+'''Remover os radicais das palavras'''
 
 
-frasescomstemmingtreinamento = aplicastemmer(basetreinamento)
-frasescomstemmingteste = aplicastemmer(baseteste)
+def aplicaRemocaoRadical(RegistroTweet):
+    removeRadica = nltk.stem.RSLPStemmer()
+    listaTextoSemRadical = []
+    for (texto, usuario) in RegistroTweet:
+        textoRemovidoRadical = [str(removeRadica.stem(palavra)) for palavra in texto.split() if palavra not in stopWordsNLTK]
+        listaTextoSemRadical.append((textoRemovidoRadical, usuario))
+    return listaTextoSemRadical
 
 
-# print(frasescomstemming)
+frasescomstemmingtreinamento = aplicaRemocaoRadical(basetreinamento)
+frasescomstemmingteste = aplicaRemocaoRadical(baseteste)
+
 
 def buscapalavras(frases):
     todaspalavras = []
@@ -88,8 +73,6 @@ palavrastreinamento = buscapalavras(frasescomstemmingtreinamento)
 palavrasteste = buscapalavras(frasescomstemmingteste)
 
 
-# print(palavras)
-
 def buscafrequencia(palavras):
     palavras = nltk.FreqDist(palavras)
     return palavras
@@ -98,8 +81,6 @@ def buscafrequencia(palavras):
 frequenciatreinamento = buscafrequencia(palavrastreinamento)
 frequenciateste = buscafrequencia(palavrasteste)
 
-
-# print(frequencia.most_common(50))
 
 def buscapalavrasunicas(frequencia):
     freq = frequencia.keys()
@@ -110,10 +91,6 @@ palavrasunicastreinamento = buscapalavrasunicas(frequenciatreinamento)
 palavrasunicasteste = buscapalavrasunicas(frequenciateste)
 
 
-# print(palavrasunicastreinamento)
-
-# print(palavrasunicas)
-
 def extratorpalavras(documento):
     doc = set(documento)
     caracteristicas = {}
@@ -123,23 +100,17 @@ def extratorpalavras(documento):
 
 
 caracteristicasfrase = extratorpalavras(['am', 'nov', 'dia'])
-# print(caracteristicasfrase)
 
 basecompletatreinamento = nltk.classify.apply_features(extratorpalavras, frasescomstemmingtreinamento)
 basecompletateste = nltk.classify.apply_features(extratorpalavras, frasescomstemmingteste)
-# print(basecompleta[15])
 
 # constroi a tabela de probabilidade
 classificador = nltk.NaiveBayesClassifier.train(basecompletatreinamento)
-print(classificador.labels())
-# print(classificador.show_most_informative_features(20))
 
-print(nltk.classify.accuracy(classificador, basecompletateste))
+print("Acurácia: ", nltk.classify.accuracy(classificador, basecompletateste))
 
 erros = []
 for (frase, classe) in basecompletateste:
-    # print(frase)
-    # print(classe)
     resultado = classificador.classify(frase)
     if resultado != classe:
         erros.append((classe, resultado, frase))
@@ -162,18 +133,12 @@ print(matriz)
 # 2. Número de classes
 # 3. ZeroRules
 
-teste = 'eu sinto medo por voce'
+teste = 'eu amo meu país'
 testestemming = []
 stemmer = nltk.stem.RSLPStemmer()
 for (palavrastreinamento) in teste.split():
     comstem = [p for p in palavrastreinamento.split()]
     testestemming.append(str(stemmer.stem(comstem[0])))
-# print(testestemming)
 
 novo = extratorpalavras(testestemming)
-# print(novo)
-
-# print(classificador.classify(novo))
 distribuicao = classificador.prob_classify(novo)
-# for classe in distribuicao.samples():
-#    print("%s: %f" % (classe, distribuicao.prob(classe)))
