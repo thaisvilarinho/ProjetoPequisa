@@ -33,8 +33,8 @@ def buscarTextoUsuario(conexao):
 
 
 if __name__ == "__main__":
-    baseDeDados = "Twitter"
-    tabela = 'tweets'
+    baseDeDados = "TwitterPrioli"
+    tabela = 'tweetsprioli'
 
     conexao = mysql.connector.connect(host='localhost', user='root', passwd='', database=baseDeDados)
     buscarTextoUsuario(conexao)

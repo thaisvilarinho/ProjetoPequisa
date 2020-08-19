@@ -114,8 +114,8 @@ for (frase, classe) in basecompletateste:
     resultado = classificador.classify(frase)
     if resultado != classe:
         erros.append((classe, resultado, frase))
-# for (classe, resultado, frase) in erros:
-#    print(classe, resultado, frase)
+for (classe, resultado, frase) in erros:
+    print(classe, resultado, frase)
 
 from nltk.metrics import ConfusionMatrix
 

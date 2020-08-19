@@ -4,7 +4,8 @@ from sklearn.model_selection import train_test_split
 basePrincipal = []
 baseTreinamento = []
 baseTeste = []
-totalRegistrosPegar = 200
+totalRegistrosPegar = 1000
+PorentagemBaseTeste = 0.3
 
 '''Ler arquivo base que contêm os dados de texto e nome de usuário de cada tweeet que foi armazenado no 
  banco de dados e gera um arquivo com 70% para base de treinamento e 30% para a base de testes que serão
@@ -12,7 +13,7 @@ totalRegistrosPegar = 200
 
 
 def escreverArquivos():
-    baseTreinamento, baseTeste = train_test_split(basePrincipal, test_size=0.3)
+    baseTreinamento, baseTeste = train_test_split(basePrincipal, test_size=PorentagemBaseTeste)
 
     print("Tamanho base principal: ", len(basePrincipal))
     print("Tamanho base treinamento: ", len(baseTreinamento))
