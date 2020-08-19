@@ -4,16 +4,18 @@
 import mysql.connector
 from mysql.connector import Error
 
-'''Buscar todos os tweets armazenados no banco de dados, e armazenar somente os campos com texto preenchido no tweet
- e o nome do usuário, dentro arquivo de texto'''
+'''Buscar os tweets armazenados no banco de dados, e armazenar somente os campos com texto preenchido no tweet
+ e o nome do usuário, dentro arquivo de texto
+ Observação: Use o fetchall no lugar de fetchmany(totalRegistroPegar) para pegar todos os registros
+ que estão armazenados no banco de dados'''
 
 
-def buscarTextoUsuario(connection):
-    cursor = connection.cursor()
+def buscarTextoUsuario(conexao):
+    cursor = conexao.cursor()
     try:
-        query = "select text, name from tweets"
+        query = "select text, name from " + tabela
         cursor.execute(query)
-        tweets = cursor.fetchall()
+        tweets = cursor.fetchmany(totalRegistroPegar)  # use fetchall para pegar todos os registros
         print("Total linhas resultado da consulta: ", cursor.rowcount)
 
         with open('base.txt', 'a') as arquivo:
@@ -25,14 +27,17 @@ def buscarTextoUsuario(connection):
     except Error as e:
         print("Erro ao acessar dados da tabela 'tweets' no banco de dados", e)
     finally:
-        if connection.is_connected():
-            connection.close()
+        if conexao.is_connected():
+            conexao.close()
             cursor.close()
+            arquivo.close()
             print("conexão com MySQL foi finalizada")
-
-    arquivo.close()
 
 
 if __name__ == "__main__":
-    connection = mysql.connector.connect(host='localhost', user='root', passwd='', database='Twitter')
-    buscarTextoUsuario(connection)
+    totalRegistroPegar = 200
+    baseDeDados = "Twitter"
+    tabela = 'tweets'
+
+    conexao = mysql.connector.connect(host='localhost', user='root', passwd='', database=baseDeDados)
+    buscarTextoUsuario(conexao)
