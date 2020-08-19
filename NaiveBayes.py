@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import nltk
+from nltk.metrics import ConfusionMatrix
 
 basetreinamento = []
 baseteste = []
@@ -50,7 +51,7 @@ carregarBases()
 Aqui não há o controle de repetições'''
 
 
-def pegarRadical(RegistroTweet):
+def pegarRadicais(RegistroTweet):
     pegaRadical = nltk.stem.RSLPStemmer()
     listaTextoRadicais = []
     for (texto, usuario) in RegistroTweet:
@@ -60,79 +61,83 @@ def pegarRadical(RegistroTweet):
     return listaTextoRadicais
 
 
-frasescomstemmingtreinamento = pegarRadical(basetreinamento)
-frasescomstemmingteste = pegarRadical(baseteste)
+registrosComRadicalTreinamento = pegarRadicais(basetreinamento)
+registrosComRadicalTeste = pegarRadicais(baseteste)
 
-'''Método faz a listagem de todas as palavras dos textos de cada tweet, sem a classe do usuário associado. Assim
-vamos conseguir montar mais facilmente a tabela de caraterísticas do texto'''
-
-
-def buscapalavras(frases):
-    todaspalavras = []
-    for (palavras, usuario) in frases:
-        todaspalavras.extend(palavras)
-    return todaspalavras
+'''Método pega somente os radicais extraídos do campo texto de cada tweet, ou seja, sem a classe do usuário 
+associado. Assim vamos conseguir montar mais facilmente a tabela de caraterísticas do texto, usando os radicais
+com cabeçalho'''
 
 
-palavrastreinamento = buscapalavras(frasescomstemmingtreinamento)
-palavrasteste = buscapalavras(frasescomstemmingteste)
+def listarSomenteRadicais(RegistrosTweets):
+    todosRadicais = []
+    for (texto, usuario) in RegistrosTweets:
+        todosRadicais.extend(texto)
+    return todosRadicais
+
+
+radicaisTreinamento = listarSomenteRadicais(registrosComRadicalTreinamento)
+radicaisTeste = listarSomenteRadicais(registrosComRadicalTeste)
 
 '''Cria uma distribuição de frequência para a lista dos radicais das palavras e descobre quais são as mais 
 importantes '''
 
 
-def buscafrequencia(palavras):
-    palavras = nltk.FreqDist(palavras)
-    return palavras
+def buscaFrequenciaRadicais(radicais):
+    radicais = nltk.FreqDist(radicais)
+    return radicais
 
 
-frequenciatreinamento = buscafrequencia(palavrastreinamento)
-frequenciateste = buscafrequencia(palavrasteste)
+frequenciaTreinamento = buscaFrequenciaRadicais(radicaisTreinamento)
+frequenciaTeste = buscaFrequenciaRadicais(radicaisTeste)
 
-'''Remove os radicais repetidos e cria o cabeçalho da base de dados'''
+'''Remove os radicais repetidos e cria o cabeçalho da tabela de características'''
 
 
-def buscapalavrasunicas(frequencia):
+def buscaRadicaisUnicos(frequencia):
     freq = frequencia.keys()
     return freq
 
 
-palavrasunicastreinamento = buscapalavrasunicas(frequenciatreinamento)
-palavrasunicasteste = buscapalavrasunicas(frequenciateste)
+radicaisUnicosTreinamento = buscaRadicaisUnicos(frequenciaTreinamento)
+radicaisUnicosTeste = buscaRadicaisUnicos(frequenciaTeste)
 
-'''Método recebe os radicais únicos, que foram extraídos as repetições, e percorre o vetor de características 
-e as comparando com cada radical, para saber se os radicais constam ou não dentro do vetor.'''
+'''Método recebe os radicais e repassa para uma coleção SET que irá manter a lista sem repetições.
+Por fim é percorrido cada elemetno do vetor de características e os compara com cada radical, 
+para assim saber se os radicais constam ou não dentro do vetor. E assim é montado o cabeçalho da tabela
+de características'''
 
 
-def extratorpalavras(documento):
+def extratorRadicais(documento):
     doc = set(documento)
     caracteristicas = {}
-    for palavras in palavrasunicastreinamento:
+    for palavras in radicaisUnicosTreinamento:
         caracteristicas['%s' % palavras] = (palavras in doc)
     return caracteristicas
 
 
-basecompletatreinamento = nltk.classify.apply_features(extratorpalavras, frasescomstemmingtreinamento)
-basecompletateste = nltk.classify.apply_features(extratorpalavras, frasescomstemmingteste)
+baseCompletaTreinamento = nltk.classify.apply_features(extratorRadicais, registrosComRadicalTreinamento)
+baseCompletaTeste = nltk.classify.apply_features(extratorRadicais, registrosComRadicalTeste)
 
-# constroi a tabela de probabilidade
-classificador = nltk.NaiveBayesClassifier.train(basecompletatreinamento)
+''' Gerará a tabela de probabilidade com algoritmo Naive Bayes utilizando a base de treinamento, ou seja
+geramos o modelo que será utilizado para verificar a acurácia'''
+classificador = nltk.NaiveBayesClassifier.train(baseCompletaTreinamento)
 
-print("Acurácia: ", nltk.classify.accuracy(classificador, basecompletateste))
+print("Acurácia: ", nltk.classify.accuracy(classificador, baseCompletaTeste))
+
 
 erros = []
-for (frase, classe) in basecompletateste:
+for (frase, classe) in baseCompletaTeste:
     resultado = classificador.classify(frase)
     if resultado != classe:
         erros.append((classe, resultado, frase))
 # for (classe, resultado, frase) in erros:
 #    print(classe, resultado, frase)
 
-from nltk.metrics import ConfusionMatrix
 
 esperado = []
 previsto = []
-for (frase, classe) in basecompletateste:
+for (frase, classe) in baseCompletaTeste:
     resultado = classificador.classify(frase)
     previsto.append(resultado)
     esperado.append(classe)
@@ -140,16 +145,3 @@ for (frase, classe) in basecompletateste:
 matriz = ConfusionMatrix(esperado, previsto)
 print(matriz)
 
-# 1. Cenário
-# 2. Número de classes
-# 3. ZeroRules
-
-teste = 'eu amo meu país'
-testestemming = []
-stemmer = nltk.stem.RSLPStemmer()
-for (palavrastreinamento) in teste.split():
-    comstem = [p for p in palavrastreinamento.split()]
-    testestemming.append(str(stemmer.stem(comstem[0])))
-
-novo = extratorpalavras(testestemming)
-distribuicao = classificador.prob_classify(novo)
