@@ -3,17 +3,16 @@
 import nltk
 from nltk.metrics import ConfusionMatrix
 
-
 ''' Cada linha lida do arquivo contêm o texto do tweet e o nome do usuário. Recebemos a leitura completa do arquivo de 
 texto e removemos o caracter de quebra de linha. Por fim, separamos cada linha do arquivo em campos que contenham o 
 texto e nome usuário para serem armazenadas em uma estrutura array bidimensional,onde quando acessarmos pelos 
 índices [x][0] teremos o texto de uma linha qualquer(x) e quando acessarmos pelos índices [x][1] teremos o nome 
-do usuário. Exemplo: print(basePrincipal[7000][0])
-Manter uma array bidimensional é necessária para aplicarmos o treinamento da base que gerará o modelo do algoritmo
-Naive Bayes e assim conseguirmos aplicar o teste para verificarmos a acurácia.'''
+do usuário. Exemplo: print(basePrincipal[7000][0])'''
 
 
 def carregarBases():
+    global baseTreinamento
+    global baseTeste
     try:
         with open('baseTreinamento.txt', 'r') as arquivo:
             for linha in arquivo.readlines():
@@ -39,9 +38,11 @@ def carregarBases():
         print('Problemas com na leitura do arquivo')
 
 
+'''Usa as stop words do nltk'''
+
+
 def definirStopWords():
     global stopWordsNLTK
-    # usar as stop words do nltk
     stopWordsNLTK = nltk.corpus.stopwords.words('portuguese')
     stopWordsNLTK.append('vou')
     stopWordsNLTK.append('tão')
@@ -51,15 +52,23 @@ def definirStopWords():
 Aqui não há o controle de repetições'''
 
 
-def pegarRadicais(RegistroTweet):
+def pegarRadicais(RegistroTweetsTreinamento, RegistroTweetsTeste):
     global stopWordsNLTK
     pegaRadical = nltk.stem.RSLPStemmer()
-    listaTextoRadicais = []
-    for (texto, usuario) in RegistroTweet:
-        textoSomenteRadical = [str(pegaRadical.stem(palavra)) for palavra in texto.split() if
+    global registrosComRadicaisTreinamento
+    global registrosComRadicaisTeste
+
+    for (texto, usuario) in RegistroTweetsTreinamento:
+        radicalTextoTreinamento = [str(pegaRadical.stem(palavra)) for palavra in texto.split() if
                                palavra not in stopWordsNLTK]
-        listaTextoRadicais.append((textoSomenteRadical, usuario))
-    return listaTextoRadicais
+        registrosComRadicaisTreinamento.append((radicalTextoTreinamento, usuario))
+
+    for (texto, usuario) in RegistroTweetsTeste:
+        radicalTextoTeste = [str(pegaRadical.stem(palavra)) for palavra in texto.split() if
+                               palavra not in stopWordsNLTK]
+        registrosComRadicaisTeste.append((radicalTextoTeste, usuario))
+
+    listarSomenteRadicais(registrosComRadicaisTreinamento, registrosComRadicaisTeste)
 
 
 '''Método pega somente os radicais extraídos do campo texto de cada tweet, ou seja, sem a classe do usuário 
@@ -67,28 +76,38 @@ associado. Assim vamos conseguir montar mais facilmente a tabela de caraterísti
 com cabeçalho'''
 
 
-def listarSomenteRadicais(RegistrosTweets):
-    todosRadicais = []
-    for (texto, usuario) in RegistrosTweets:
-        todosRadicais.extend(texto)
-    return buscaFrequenciaRadicais(todosRadicais)
+def listarSomenteRadicais(registrosComRadicaisTreinamento, registrosComRadicaisTeste):
+    todosRadicaisTreinamento = []
+    todosRadicaisTeste = []
+
+    for (texto, usuario) in registrosComRadicaisTreinamento:
+        todosRadicaisTreinamento.extend(texto)
+
+    for (texto, usuario) in registrosComRadicaisTeste:
+        todosRadicaisTeste.extend(texto)
+
+    buscaFrequenciaRadicais(todosRadicaisTreinamento, todosRadicaisTeste)
 
 
 '''Cria uma distribuição de frequência para a lista dos radicais das palavras e descobre quais são as mais 
 importantes '''
 
 
-def buscaFrequenciaRadicais(radicais):
-    radicais = nltk.FreqDist(radicais)
-    return buscaRadicaisUnicos(radicais)
+def buscaFrequenciaRadicais(radicaisFrequentesTreinamento, radicaisTeste):
+    radicaisFrequentesTreinamento = nltk.FreqDist(radicaisFrequentesTreinamento)
+    radicaisFrequentesTeste = nltk.FreqDist(radicaisTeste)
+    buscaRadicaisUnicos(radicaisFrequentesTreinamento, radicaisFrequentesTeste)
 
 
 '''Remove os radicais repetidos e cria o cabeçalho da tabela de características'''
 
 
-def buscaRadicaisUnicos(frequencia):
-    freq = frequencia.keys()
-    return freq
+def buscaRadicaisUnicos(radicaisFrequentesTreinamento, radicaisFrequentesTeste):
+    global radicaisUnicosTreinamento
+    global radicaisUnicosTeste
+    radicaisUnicosTreinamento = radicaisFrequentesTreinamento.keys()
+    radicaisUnicosTeste= radicaisFrequentesTeste.keys()
+    gerarBasesCompletas()
 
 
 '''Método recebe os radicais e repassa para uma coleção SET que irá manter a lista sem repetições.
@@ -107,8 +126,10 @@ def extratorRadicais(documento):
 
 
 def gerarBasesCompletas():
-    baseCompletaTreinamento = nltk.classify.apply_features(extratorRadicais, registrosComRadicalTreinamento)
-    baseCompletaTeste = nltk.classify.apply_features(extratorRadicais, registrosComRadicalTeste)
+    global registrosComRadicalTreinamento
+    global registrosComRadicalTeste
+    baseCompletaTreinamento = nltk.classify.apply_features(extratorRadicais, registrosComRadicaisTreinamento)
+    baseCompletaTeste = nltk.classify.apply_features(extratorRadicais, registrosComRadicaisTeste)
     treinamento(baseCompletaTreinamento, baseCompletaTeste)
 
 
@@ -149,12 +170,12 @@ if __name__ == "__main__":
     baseTreinamento = []
     baseTeste = []
     stopWordsNLTK = ''
+    registrosComRadicaisTreinamento = []
+    registrosComRadicaisTeste = []
+    radicaisUnicosTreinamento = []
+    radicaisUnicosTeste = []
 
     carregarBases()
     definirStopWords()
-    registrosComRadicalTreinamento = pegarRadicais(baseTreinamento)
-    registrosComRadicalTeste = pegarRadicais(baseTeste)
-    radicaisUnicosTreinamento = listarSomenteRadicais(registrosComRadicalTreinamento)
-    radicaisUnicosTeste = listarSomenteRadicais(registrosComRadicalTeste)
-    gerarBasesCompletas()
+    pegarRadicais(baseTreinamento, baseTeste)
 
