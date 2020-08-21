@@ -4,8 +4,6 @@
 import tweepy as tw
 import re
 import TwitterCredentials as credenciais
-import csv
-
 import pymysql
 from pymysql import ProgrammingError
 
@@ -29,7 +27,7 @@ def obter_tweets(usuario, api, cursor):
         followers = r.user.followers_count
 
         # Expressão regular caracteres especiais e hyperlinks
-        texto_tratado = re.sub(r'[^A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]|(http\S+)', '', text)
+        texto_tratado = re.sub(r'@(\w+)|(R\$)|[^A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ!?;,. ]|(http\S+)', ' ', text)
         tweets.append(texto_tratado)
         print("...%s total de tweets carregados" % (len(tweets)))
 
@@ -55,27 +53,18 @@ if __name__ == '__main__':
     api = tw.API(auth)
 
     # Usuário que será buscados os tweets
-    usuario = 'xxxxx'
+    usuario = 'xxx'
 
     #Conexão com o banco de dados
     conexao = pymysql.connect(
         host='localhost',
         user='root',
         passwd='',
-        database='Twitter'
+        database='TwitterZ'
     )
 
     # Comando que executar as instruções
     cursor = conexao.cursor()
-
-    # Cria o banco de dados
-    #cursor.execute("CREATE DATABASE Twitter CHARSET = UTF8 COLLATE = utf8_general_ci")
-
-    # Criando as tabelas no banco de dados
-    #cursor.execute("CREATE TABLE tweets(id_str VARCHAR(255) PRIMARY KEY, created DATETIME,"
-    #               "text LONGTEXT, fav VARCHAR(255), name VARCHAR(255), description VARCHAR(255),"
-    #               "loc VARCHAR(255), user_created DATE,followers VARCHAR(255))")
-
 
     # Filtrar os tweets de um usuário específico
     tweets = obter_tweets(usuario, api, cursor)

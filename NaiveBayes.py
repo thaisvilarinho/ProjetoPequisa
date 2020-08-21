@@ -7,7 +7,7 @@ from nltk.metrics import ConfusionMatrix
 texto e removemos o caracter de quebra de linha. Por fim, separamos cada linha do arquivo em campos que contenham o 
 texto e nome usuário para serem armazenadas em uma estrutura array bidimensional,onde quando acessarmos pelos 
 índices [x][0] teremos o texto de uma linha qualquer(x) e quando acessarmos pelos índices [x][1] teremos o nome 
-do usuário. Exemplo: print(basePrincipal[7000][0])'''
+do usuário. Exemplo: print(baseTreinamento[7000][0])'''
 
 
 def carregarBases():
@@ -33,9 +33,21 @@ def carregarBases():
                 baseTeste.append(registro)
 
         arquivo.close()
+        definirStopWords()
+        pegarRadicais(baseTreinamento, baseTeste)
 
     except IOError:
         print('Problemas com na leitura do arquivo')
+
+
+def arquivarTextoSemStopWords(RegistroTweets):
+    with open('textoSemStopWords.txt', 'w+') as arquivo:
+        for (texto, usuario) in RegistroTweets:
+            for palavra in texto.split():
+                arquivo.write(str(palavra))
+                arquivo.write("\n")
+
+    arquivo.close()
 
 
 '''Usa as stop words do nltk'''
@@ -52,20 +64,20 @@ def definirStopWords():
 Aqui não há o controle de repetições'''
 
 
-def pegarRadicais(RegistroTweetsTreinamento, RegistroTweetsTeste):
+def pegarRadicais(registroTweetsTreinamento, registroTweetsTeste):
     global stopWordsNLTK
     pegaRadical = nltk.stem.RSLPStemmer()
     global registrosComRadicaisTreinamento
     global registrosComRadicaisTeste
 
-    for (texto, usuario) in RegistroTweetsTreinamento:
+    for (texto, usuario) in registroTweetsTreinamento:
         radicalTextoTreinamento = [str(pegaRadical.stem(palavra)) for palavra in texto.split() if
-                               palavra not in stopWordsNLTK]
+                                   palavra not in stopWordsNLTK]
         registrosComRadicaisTreinamento.append((radicalTextoTreinamento, usuario))
 
-    for (texto, usuario) in RegistroTweetsTeste:
+    for (texto, usuario) in registroTweetsTeste:
         radicalTextoTeste = [str(pegaRadical.stem(palavra)) for palavra in texto.split() if
-                               palavra not in stopWordsNLTK]
+                             palavra not in stopWordsNLTK]
         registrosComRadicaisTeste.append((radicalTextoTeste, usuario))
 
     listarSomenteRadicais(registrosComRadicaisTreinamento, registrosComRadicaisTeste)
@@ -99,6 +111,17 @@ def buscaFrequenciaRadicais(radicaisFrequentesTreinamento, radicaisTeste):
     buscaRadicaisUnicos(radicaisFrequentesTreinamento, radicaisFrequentesTeste)
 
 
+'''Gerar arquivo txt para visualizar radicais únicos gerados'''
+
+
+def arquivarRadicaisUnicos(listaRadicaisUnicos):
+    with open('radicais.txt', 'a') as arquivo:
+        for radical in listaRadicaisUnicos:
+            arquivo.write(radical)
+            arquivo.write("\n")
+    arquivo.close()
+
+
 '''Remove os radicais repetidos e cria o cabeçalho da tabela de características'''
 
 
@@ -106,9 +129,8 @@ def buscaRadicaisUnicos(radicaisFrequentesTreinamento, radicaisFrequentesTeste):
     global radicaisUnicosTreinamento
     global radicaisUnicosTeste
     radicaisUnicosTreinamento = radicaisFrequentesTreinamento.keys()
-    radicaisUnicosTeste= radicaisFrequentesTeste.keys()
+    radicaisUnicosTeste = radicaisFrequentesTeste.keys()
     gerarBasesCompletas()
-
 
 '''Método recebe os radicais e repassa para uma coleção SET que irá manter a lista sem repetições.
 Por fim é percorrido cada elemetno do vetor de características e os compara com cada radical, 
@@ -176,6 +198,10 @@ if __name__ == "__main__":
     radicaisUnicosTeste = []
 
     carregarBases()
-    definirStopWords()
-    pegarRadicais(baseTreinamento, baseTeste)
+
+    # Gerar arquivos de texto para análise
+    #arquivarTextoSemStopWords(baseTreinamento)
+    #arquivarTextoSemStopWords(baseTeste)
+    #arquivarRadicaisUnicos(radicaisUnicosTreinamento)
+    #arquivarRadicaisUnicos(radicaisUnicosTeste)
 

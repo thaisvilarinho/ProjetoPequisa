@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
 # Importar bibliotecas
+import re
+
 import mysql.connector
 from mysql.connector import Error
+import string
 
 '''Buscar os tweets armazenados no banco de dados, e armazenar somente os campos com texto preenchido no tweet
  e o nome do usuário, dentro arquivo de texto'''
@@ -18,9 +21,13 @@ def buscarTextoUsuario(conexao):
 
         with open('base.txt', 'a') as arquivo:
             for texto, usuario in tweets:
-                if texto != '':
-                    arquivo.write(texto + ',' + usuario)
+                texto = texto.strip()
+                texto = re.sub("\s+", ' ', texto)
+                if len(texto) > 0:
+                    arquivo.write(texto + '$' + usuario)
                     arquivo.write("\n")
+
+
 
     except Error as e:
         print("Erro ao acessar dados da tabela 'tweets' no banco de dados", e)
@@ -33,7 +40,7 @@ def buscarTextoUsuario(conexao):
 
 
 if __name__ == "__main__":
-    baseDeDados = "Twitter"
+    baseDeDados = "TwitterZ"
     tabela = 'tweets'
 
     conexao = mysql.connector.connect(host='localhost', user='root', passwd='', database=baseDeDados)

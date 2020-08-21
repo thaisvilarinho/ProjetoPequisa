@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
+import re
+import string
+
 from sklearn.model_selection import train_test_split
 
 basePrincipal = []
 baseTreinamento = []
 baseTeste = []
 totalRegistrosPegar = 1000
-PorentagemBaseTeste = 0.3
+PorcentagemBaseTeste = 0.3
 
 '''Ler arquivo base que contêm os dados de texto e nome de usuário de cada tweeet que foi armazenado no 
  banco de dados e gera um arquivo com 70% para base de treinamento e 30% para a base de testes que serão
@@ -13,7 +16,7 @@ PorentagemBaseTeste = 0.3
 
 
 def escreverArquivos():
-    baseTreinamento, baseTeste = train_test_split(basePrincipal, test_size=PorentagemBaseTeste)
+    baseTreinamento, baseTeste = train_test_split(basePrincipal, test_size=PorcentagemBaseTeste)
 
     print("Tamanho base principal: ", len(basePrincipal))
     print("Tamanho base treinamento: ", len(baseTreinamento))
@@ -37,17 +40,26 @@ def escreverArquivos():
     arquivoBaseTeste.close()
 
 
+'''Gera arquivo lista de base Principal que será repartida entre base treinamento e base.
+É removida as pontuções e espaços vazios e espaços extras entre as palavras, convertendo
+as palavras para minúsculo. Quando encontra uma barra '/' a converte para espaço vazio'''
+
+
 def leituraArquivoBase():
     try:
         with open("base.txt", 'r+') as arquivoLeitura:
             for linha in arquivoLeitura.readlines():
-                linha = linha.split(',')
+                linha = linha.split('$')
                 linha = [x.strip() for x in linha]
                 texto = linha[0]
                 usuario = linha[1]
-                registro = [texto, usuario]
-                if len(basePrincipal) < totalRegistrosPegar:
-                    basePrincipal.append(registro)
+                texto = texto.translate(str.maketrans('', '', string.punctuation))
+                texto = re.sub('\s+', ' ', texto.strip())
+                texto = texto.lower()
+                if len(texto) > 0:
+                    registro = [texto, usuario]
+                    if len(basePrincipal) < totalRegistrosPegar:
+                        basePrincipal.append(registro)
 
         escreverArquivos()
     except IOError:
