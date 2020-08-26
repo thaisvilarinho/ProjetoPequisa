@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import re
 import string
-
 from sklearn.model_selection import train_test_split
 
 basePrincipal = []
 baseTreinamento = []
 baseTeste = []
-totalRegistrosPegar = 1000
-PorcentagemBaseTeste = 0.3
+totalRegistrosPegar = 3195
+PorcentagemBaseTeste = 0.1
 
 '''Ler arquivo base que contêm os dados de texto e nome de usuário de cada tweeet que foi armazenado no 
  banco de dados e gera um arquivo com 70% para base de treinamento e 30% para a base de testes que serão
@@ -48,7 +47,7 @@ as palavras para minúsculo. Quando encontra uma barra '/' a converte para espa�
 def leituraArquivoBase():
     try:
         with open("base.txt", 'r+') as arquivoLeitura:
-            for linha in arquivoLeitura.readlines():
+            for linha in arquivoLeitura:
                 linha = linha.split('$')
                 linha = [x.strip() for x in linha]
                 texto = linha[0]
@@ -58,7 +57,7 @@ def leituraArquivoBase():
                 texto = texto.lower()
                 if len(texto) > 0:
                     registro = [texto, usuario]
-                    if len(basePrincipal) < totalRegistrosPegar:
+                    if len(basePrincipal) < totalRegistrosPegar and registro not in basePrincipal:
                         basePrincipal.append(registro)
 
         escreverArquivos()
