@@ -5,7 +5,7 @@ from nltk.metrics import ConfusionMatrix
 
 
 def gerarArquivoSemStopWords(listaSemStopWords):
-    with open('textoSemStopWords.txt', 'w+') as arquivo:
+    with open('textoSemStopWords.txt', 'w+', encoding="utf-8") as arquivo:
         for (texto, usuario) in listaSemStopWords:
             for palavra in texto.split():
                 if palavra not in stopWordsNLTK:
@@ -16,9 +16,18 @@ def gerarArquivoSemStopWords(listaSemStopWords):
 
 
 def arquivarRadicaisUnicos(listaRadicaisUnicos):
-    with open('radicais.txt', 'a') as arquivo:
+    with open('radicais.txt', 'a', encoding="utf-8") as arquivo:
         for radical in listaRadicaisUnicos:
             arquivo.write(radical)
+            arquivo.write("\n")
+    arquivo.close()
+
+
+def arquivarErros():
+    global erros
+    with open('erros.txt', 'a', encoding="utf-8") as arquivo:
+        for classe, resultado, frase in erros:
+            arquivo.write(classe + ',' + resultado + ',' + str(frase))
             arquivo.write("\n")
     arquivo.close()
 
@@ -27,18 +36,18 @@ def carregarBases():
     global baseTreinamento
     global baseTeste
     try:
-        with open('baseTreinamento.txt', 'r') as arquivo:
+        with open('baseTreinamento.txt', 'r', encoding="utf-8") as arquivo:
             for linha in arquivo.readlines():
-                linha = linha.split(',')
+                linha = linha.split('#')
                 linha = [x.strip() for x in linha]
                 texto = linha[0]
                 usuario = linha[1]
                 registro = [texto, usuario]
                 baseTreinamento.append(registro)
 
-        with open('baseTeste.txt', 'r') as arquivo:
+        with open('baseTeste.txt', 'r', encoding="utf-8") as arquivo:
             for linha in arquivo.readlines():
-                linha = linha.split(',')
+                linha = linha.split('#')
                 linha = [x.strip() for x in linha]
                 texto = linha[0]
                 usuario = linha[1]
@@ -117,7 +126,7 @@ def buscaRadicaisUnicos(radicaisFrequentesTreinamento, radicaisFrequentesTeste):
     gerarBasesCompletas()
 
 
-def extratorRadicais(documento):
+def extrairCaracteristicas(documento):
     global radicaisUnicosTreinamento
     doc = set(documento)
     caracteristicas = {}
@@ -127,8 +136,8 @@ def extratorRadicais(documento):
 
 
 def gerarBasesCompletas():
-    baseCompletaTreinamento = nltk.classify.apply_features(extratorRadicais, registrosComRadicaisTreinamento)
-    baseCompletaTeste = nltk.classify.apply_features(extratorRadicais, registrosComRadicaisTeste)
+    baseCompletaTreinamento = nltk.classify.apply_features(extrairCaracteristicas, registrosComRadicaisTreinamento)
+    baseCompletaTeste = nltk.classify.apply_features(extrairCaracteristicas, registrosComRadicaisTeste)
     treinamento(baseCompletaTreinamento, baseCompletaTeste)
 
 
@@ -140,13 +149,10 @@ def treinamento(baseCompletaTreinamento, baseCompletaTeste):
 
 
 def verificarErros(classificador, baseCompletaTeste):
-    erros = []
     for (frase, classe) in baseCompletaTeste:
         resultado = classificador.classify(frase)
         if resultado != classe:
             erros.append((classe, resultado, frase))
-    for (classe, resultado, frase) in erros:
-        print(classe, resultado, frase)
 
 
 def gerarMatrizConfusao(classificador, baseCompletaTeste):
@@ -169,10 +175,12 @@ if __name__ == "__main__":
     registrosComRadicaisTeste = []
     radicaisUnicosTreinamento = []
     radicaisUnicosTeste = []
+    erros = []
 
     carregarBases()
 
     # Gerar arquivos
+    # arquivarErros()
     # gerarArquivoSemStopWords(baseTreinamento)
     # gerarArquivoSemStopWords(baseTeste)
     # arquivarRadicaisUnicos(radicaisUnicosTreinamento)

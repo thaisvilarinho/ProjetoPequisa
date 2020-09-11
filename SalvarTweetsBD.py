@@ -2,39 +2,32 @@
 
 # Importar bibliotecas
 import tweepy as tw
-import re
 import TwitterCredentials as credenciais
 import pymysql
 from pymysql import ProgrammingError
 
 
 def obter_tweets(usuario, api, cursor):
+
     # Busca tweets de um usuário específico em sua timeline, exluindo retweets
     resultado = tw.Cursor(api.user_timeline, screen_name=usuario,
                           include_rts='false', tweet_mode="extended").items()
-    # Lista que irá receber os textos tratados (sem caracteres especiais e acentuações)
     tweets = []
+
     # Pecorre a timeline do usuário pegando de 20 em 20 tweets
     for r in resultado:
         id_str = r.id_str
         created = r.created_at
         text = r.full_text
-        fav = r.favorite_count
         name = r.user.screen_name
-        description = re.sub('[^A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]', '', r.user.description)
-        loc = re.sub('[^A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]', '', r.user.location)
-        user_created = r.user.created_at
-        followers = r.user.followers_count
 
-        # Expressão regular caracteres especiais e hyperlinks
-        texto_tratado = re.sub(r'@(\w+)|(R\$)|[^A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ!?;,. ]|(http\S+)', ' ', text)
-        tweets.append(texto_tratado)
+        tweets.append(text)
         print("...%s total de tweets carregados" % (len(tweets)))
 
         try:
-            comando_sql = "INSERT INTO tweets(id_str, created, text, fav, name, description,"\
-                          "loc, user_created, followers) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            valor = [(id_str, created, texto_tratado, fav, name, description, loc, user_created, followers)]
+            comando_sql = "INSERT INTO tweets(id_str, created, text, name) " \
+                          "VALUES (%s, %s, %s, %s)"
+            valor = [(id_str, created, text, name)]
             cursor.executemany(comando_sql, valor)
             conexao.commit()
 
@@ -55,13 +48,12 @@ if __name__ == '__main__':
     # Usuário que será buscados os tweets
     usuario = 'xxx'
 
-    #Conexão com o banco de dados
+    # Conexão com o banco de dados
     conexao = pymysql.connect(
         host='localhost',
         user='root',
         passwd='',
-        database='TwitterZ'
-    )
+        database='Twitter')
 
     # Comando que executar as instruções
     cursor = conexao.cursor()
@@ -71,4 +63,3 @@ if __name__ == '__main__':
 
     conexao.close()
     cursor.close()
-
